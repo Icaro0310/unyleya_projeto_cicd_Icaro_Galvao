@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: azure-vote-config
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: azure-vote
+data:
+  TITLE: {{ .Values.config.TITLE | quote }}
+  VOTE1VALUE: {{ .Values.config.VOTE1VALUE | quote }}
+  VOTE2VALUE: {{ .Values.config.VOTE2VALUE | quote }}
+  SHOWHOST: {{ .Values.config.SHOWHOST | quote }}

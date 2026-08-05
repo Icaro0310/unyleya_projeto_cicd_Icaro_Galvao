@@ -1,0 +1,66 @@
+# Configuracoes do Helm Chart - Azure Voting App
+
+# Namespace
+namespace: azure-vote
+
+# Frontend (Flask)
+frontend:
+  name: azure-vote-front
+  replicas: 2
+  image:
+    repository: localhost:5000/azure-vote-front
+    tag: latest
+    pullPolicy: Always
+  port: 80
+  nodePort: 30080
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  livenessProbe:
+    path: /
+    initialDelaySeconds: 30
+    periodSeconds: 10
+  readinessProbe:
+    path: /
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+# Backend (Redis)
+backend:
+  name: azure-vote-back
+  replicas: 1
+  image:
+    repository: mcr.microsoft.com/oss/bitnami/redis
+    tag: 6.0.8
+    pullPolicy: IfNotPresent
+  port: 6379
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 100m
+      memory: 128Mi
+  env:
+    ALLOW_EMPTY_PASSWORD: "yes"
+
+# ConfigMap da aplicacao
+config:
+  TITLE: "Azure Voting App - Unyleya"
+  VOTE1VALUE: "Cats"
+  VOTE2VALUE: "Dogs"
+  SHOWHOST: "false"
+
+# Service
+service:
+  frontend:
+    type: NodePort
+    port: 80
+    nodePort: 30080
+  backend:
+    type: ClusterIP
+    port: 6379

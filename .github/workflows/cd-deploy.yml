@@ -1,0 +1,131 @@
+name: CD - Deploy Kubernetes (Helm)
+
+on:
+  workflow_run:
+    workflows: ["CI - Build e Push Imagem"]
+    types:
+      - completed
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag da imagem para deploy (SHA do commit)'
+        required: true
+        default: 'latest'
+
+env:
+  IMAGE_NAME: azure-vote-front
+  REGISTRY: ghcr.io
+  NAMESPACE: azure-vote
+  RELEASE_NAME: azure-vote
+
+jobs:
+  # ============================
+  # JOB 1: Aprovacao por Email
+  # ============================
+  approval:
+    name: Aprovacao para Deploy (Email)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao/deployments
+    steps:
+      - name: Aguardar aprovacao manual
+        run: |
+          echo "========================================"
+          echo "  DEPLOY AGUARDANDO APROVACAO POR EMAIL"
+          echo "========================================"
+          echo "Aplicacao: Azure Voting App"
+          echo "Ambiente: Producao (Kubernetes)"
+          echo "Metodo: Helm Chart"
+          echo "========================================"
+          echo "Aprovadores serao notificados por email"
+          echo "Apos aprovacao, o deploy continuara"
+          echo "========================================"
+
+  # ============================
+  # JOB 2: Deploy via Helm
+  # ============================
+  deploy:
+    name: Deploy no Kubernetes via Helm
+    runs-on: ubuntu-latest
+    needs: approval
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Obter tag da imagem
+        id: image_tag
+        run: |
+          if [ "${{ github.event.inputs.image_tag }}" != "" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configurar kubeconfig (cluster Kubernetes)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > $HOME/.kube/config
+          kubectl get nodes
+
+      - name: Deploy via Helm
+        run: |
+          IMAGE_FULL="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}"
+          echo "Deployando imagem: $IMAGE_FULL"
+
+          helm upgrade --install ${{ env.RELEASE_NAME }} iac/helm/azure-vote \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --set frontend.image.repository=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }} \
+            --set frontend.image.tag=${{ steps.image_tag.outputs.tag }} \
+            --wait --timeout 300s
+
+      - name: Verificar deployment
+        run: |
+          kubectl get all -n ${{ env.NAMESPACE }}
+          echo "---"
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+
+      - name: Testar acesso a aplicacao
+        run: |
+          # Aguardar pods ficarem prontos
+          kubectl wait --for=condition=ready pod -l app=${{ env.IMAGE_NAME }} -n ${{ env.NAMESPACE }} --timeout=300s || true
+
+          # Obter NodePort
+          NODE_PORT=$(kubectl get svc ${{ env.IMAGE_NAME }} -n ${{ env.NAMESPACE }} -o jsonpath='{.spec.ports[0].nodePort}')
+          echo "NodePort: $NODE_PORT"
+
+          # Obter IP do node
+          NODE_IP=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].address}')
+          echo "Node IP: $NODE_IP"
+
+          echo "URL de acesso: http://$NODE_IP:$NODE_PORT"
+
+      - name: Resumo do deploy
+        run: |
+          echo "========================================"
+          echo "  DEPLOY CONCLUIDO - Azure Voting App"
+          echo "========================================"
+          echo "Release: ${{ env.RELEASE_NAME }}"
+          echo "Namespace: ${{ env.NAMESPACE }}"
+          echo "Imagem: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}"
+          echo "Metodo: Helm Chart"
+          echo "Cluster: Kubernetes (kind)"
+          echo "========================================"

@@ -1,0 +1,13 @@
+Azure Voting App implantado com sucesso!
+
+Para acessar a aplicacao:
+  kubectl get svc {{ .Values.frontend.name }} -n {{ .Values.namespace }}
+
+Porta NodePort: {{ .Values.service.frontend.nodePort }}
+Acesse: http://<NODE_IP>:{{ .Values.service.frontend.nodePort }}
+
+Para verificar os pods:
+  kubectl get pods -n {{ .Values.namespace }}
+
+Para verificar os deployments:
+  kubectl get deployments -n {{ .Values.namespace }}
