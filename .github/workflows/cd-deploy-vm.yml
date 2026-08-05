@@ -1,0 +1,142 @@
+name: CD - Deploy VM Google Cloud
+
+on:
+  workflow_run:
+    workflows: ["CI - Build e Push Imagem"]
+    types:
+      - completed
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Tag da imagem para deploy (SHA do commit)'
+        required: true
+        default: 'latest'
+
+env:
+  IMAGE_NAME: azure-vote-front
+  REGISTRY: ghcr.io
+  NAMESPACE: azure-vote
+  RELEASE_NAME: azure-vote
+  VM_IP: 35.228.210.46
+
+jobs:
+  # ============================
+  # JOB 1: Aprovacao por Email
+  # ============================
+  approval:
+    name: Aprovacao para Deploy (Email)
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: http://${{ env.VM_IP }}:30080
+    steps:
+      - name: Aguardar aprovacao manual
+        run: |
+          echo "========================================"
+          echo "  DEPLOY AGUARDANDO APROVACAO POR EMAIL"
+          echo "========================================"
+          echo "Aplicacao: Azure Voting App"
+          echo "Ambiente: Producao (VM Google Cloud)"
+          echo "VM IP: ${{ env.VM_IP }}"
+          echo "Metodo: Helm Chart"
+          echo "========================================"
+          echo "Aprovadores serao notificados por email"
+          echo "Apos aprovacao, o deploy continuara"
+          echo "========================================"
+
+  # ============================
+  # JOB 2: Deploy via Helm na VM
+  # ============================
+  deploy:
+    name: Deploy na VM Google Cloud via Helm
+    runs-on: ubuntu-latest
+    needs: approval
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Checkout codigo
+        uses: actions/checkout@v4
+
+      - name: Obter tag da imagem
+        id: image_tag
+        run: |
+          if [ "${{ github.event.inputs.image_tag }}" != "" ]; then
+            echo "tag=${{ github.event.inputs.image_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=latest" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Login no GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Helm
+        uses: azure/setup-helm@v4
+
+      - name: Configurar kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Configurar kubeconfig (VM Google Cloud)
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBECONFIG_VM }}" | base64 -d > $HOME/.kube/config
+          chmod 600 $HOME/.kube/config
+          kubectl get nodes
+
+      - name: Configurar secret de registry
+        run: |
+          kubectl create secret docker-registry ghcr-secret \
+            --docker-server=ghcr.io \
+            --docker-username=${{ github.actor }} \
+            --docker-password=${{ secrets.GITHUB_TOKEN }} \
+            --namespace ${{ env.NAMESPACE }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy via Helm
+        run: |
+          IMAGE_FULL="${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}"
+          echo "Deployando imagem: $IMAGE_FULL"
+
+          helm upgrade --install ${{ env.RELEASE_NAME }} iac/helm/azure-vote \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --values iac/helm/azure-vote/values-prod.yaml \
+            --set frontend.image.repository=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }} \
+            --set frontend.image.tag=${{ steps.image_tag.outputs.tag }} \
+            --set frontend.image.pullPolicy=Always \
+            --wait --timeout 300s
+
+      - name: Verificar deployment
+        run: |
+          kubectl get all -n ${{ env.NAMESPACE }}
+          echo "---"
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide
+
+      - name: Testar acesso a aplicacao
+        run: |
+          # Aguardar pods ficarem prontos
+          kubectl wait --for=condition=ready pod -l app=${{ env.IMAGE_NAME }} -n ${{ env.NAMESPACE }} --timeout=300s || true
+
+          echo "URL de acesso: http://${{ env.VM_IP }}:30080"
+          
+          # Testar acesso (pode falhar no GitHub Actions se não houver conectividade)
+          curl -I http://${{ env.VM_IP }}:30080 || echo "Acesso externo não disponível no GitHub Actions"
+
+      - name: Resumo do deploy
+        run: |
+          echo "========================================"
+          echo "  DEPLOY CONCLUIDO - Azure Voting App"
+          echo "========================================"
+          echo "Release: ${{ env.RELEASE_NAME }}"
+          echo "Namespace: ${{ env.NAMESPACE }}"
+          echo "Imagem: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ steps.image_tag.outputs.tag }}"
+          echo "Metodo: Helm Chart"
+          echo "Cluster: k3s (VM Google Cloud)"
+          echo "VM IP: ${{ env.VM_IP }}"
+          echo "URL: http://${{ env.VM_IP }}:30080"
+          echo "========================================"

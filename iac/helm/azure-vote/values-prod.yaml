@@ -1,4 +1,5 @@
-# Configuracoes do Helm Chart - Azure Voting App
+# Configurações para deploy na VM Google Cloud (Produção)
+# VM: unyleya-k8s (IP: 35.228.210.46)
 
 # Namespace
 namespace: azure-vote
@@ -18,8 +19,8 @@ frontend:
       cpu: 100m
       memory: 128Mi
     limits:
-      cpu: 250m
-      memory: 256Mi
+      cpu: 500m
+      memory: 512Mi
   livenessProbe:
     path: /
     initialDelaySeconds: 30
@@ -43,14 +44,14 @@ backend:
       cpu: 50m
       memory: 64Mi
     limits:
-      cpu: 100m
-      memory: 128Mi
+      cpu: 200m
+      memory: 256Mi
   env:
     ALLOW_EMPTY_PASSWORD: "yes"
 
 # ConfigMap da aplicacao
 config:
-  TITLE: "Azure Voting App - Unyleya"
+  TITLE: "Azure Voting App - Unyleya (Produção)"
   VOTE1VALUE: "Cats"
   VOTE2VALUE: "Dogs"
   SHOWHOST: "false"

@@ -6,12 +6,29 @@
 
 ---
 
+## STATUS ATUAL
+
+### Ambiente de Produção (VM Google Cloud)
+- ✅ **VM Google Cloud:** unyleya-k8s (IP: 35.228.210.46)
+- ✅ **Acesso Público:** http://35.228.210.46:30080
+- ✅ **Kubernetes:** k3s (cluster leve)
+- ✅ **Deploy:** Helm Chart + GitHub Actions
+- 📝 **Instruções Migração:** Veja `MIGRACAO_VM.md`
+
+### Ambiente de Desenvolvimento (Local)
+- ✅ **Cluster:** kind (Kubernetes in Docker)
+- ✅ **Acesso Local:** http://localhost:30080
+- ✅ **Monitoramento:** New Relic instalado
+
+---
+
 ## Sobre o Projeto
 
 Implementei uma esteira (pipeline) automatizada de CI/CD completa para a aplicacao **Azure Voting App Redis**, incluindo:
 
 - **Parte 1 (Unidade 3):** Pipeline CI/CD com GitHub Actions - lint, build, test, security scan
 - **Parte 2 (Unidade 4):** Infraestrutura Kubernetes com Terraform, deploy via Helm Chart, e monitoramento com New Relic
+- **Migração para Nuvem:** Deploy em VM Google Cloud para acesso público do professor
 
 A aplicacao consiste em um frontend Python Flask (sistema de votacao web) e um backend Redis para armazenamento dos votos, containerizados com Docker.
 
