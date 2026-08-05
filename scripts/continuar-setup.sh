@@ -18,7 +18,6 @@ chmod 600 ~/.kube/config
 # Verificar cluster
 echo ">>> Verificando cluster..."
 sudo k3s kubectl get nodes
-sudo k3s kubectl version --short
 
 # Instalar Helm
 echo ">>> Instalando Helm..."
