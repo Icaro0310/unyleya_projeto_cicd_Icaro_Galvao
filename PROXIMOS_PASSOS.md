@@ -23,52 +23,46 @@
 
 ---
 
-## 📋 PRÓXIMOS PASSOS (MANUAIS)
+## 📋 PRÓXIMOS PASSOS (MÉTODO MAIS SIMPLES)
 
-### 1. ACESSAR A VM
-```bash
-gcloud compute ssh unyleya-k8s --zone=europe-north1-c
-```
+### MÉTODO RECOMENDADO: VIA GOOGLE CLOUD CONSOLE (NO NAVEGADOR)
 
-### 2. EXECUTAR SETUP
+Não precisa instalar nada no seu PC!
+
+**1. Abrir Console do Google Cloud**
+- Acesse: https://console.cloud.google.com/compute/instances
+- Encontre a VM: unyleya-k8s
+- Clique no botão "SSH" (abre terminal no navegador)
+
+**2. Executar setup completo**
 ```bash
-# Na VM
+cd ~
 git clone https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao.git
 cd unyleya_projeto_cicd_Icaro_Galvao
 chmod +x scripts/*.sh
-./scripts/setup-vm-k8s.sh
+./scripts/setup-completo.sh
 ```
 
-### 3. COPIAR KUBECONFIG PARA GITHUB
-```bash
-# Na VM
-cat ~/.kube/config | base64 -w 0
-```
-- Copie o resultado
+**3. Copiar kubeconfig para GitHub**
+- O script vai exibir o kubeconfig em base64
 - No GitHub: Settings → Secrets → Actions → New secret
 - Nome: `KUBECONFIG_VM`
 - Valor: cole o base64
 
-### 4. DEPLOY DA APLICAÇÃO
-```bash
-# Opção A: Script na VM
-./scripts/deploy-app.sh
+**4. Testar acesso**
+Acesse: http://35.228.210.46:30080
 
-# Opção B: GitHub Actions
-# Vá em Actions → CD - Deploy VM Google Cloud → Run workflow
+---
+
+### MÉTODO ALTERNATIVO: VIA gcloud CLI
+
+Se preferir usar o terminal local:
+
+```bash
+gcloud compute ssh unyleya-k8s --zone=europe-north1-c
 ```
 
-### 5. TESTAR ACESSO
-```bash
-# De qualquer lugar
-curl http://35.228.210.46:30080
-```
-Acesse no navegador: http://35.228.210.46:30080
-
-### 6. CONFIGURAR NEW RELIC (OPCIONAL)
-```bash
-./scripts/setup-newrelic.sh
-```
+Depois siga os passos do script `setup-completo.sh` ou execute manualmente conforme `MIGRACAO_VM.md`
 
 ---
 

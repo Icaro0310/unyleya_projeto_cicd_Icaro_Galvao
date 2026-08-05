@@ -27,20 +27,43 @@ Migrar a aplicação do kind local para a VM Google Cloud para acesso público d
 
 ### 1. ACESSAR A VM VIA SSH
 
-#### Opção A: Usando Google Cloud CLI (recomendado)
+#### Opção A: Via Google Cloud Console (RECOMENDADO - mais simples)
+✅ Não precisa instalar nada no seu PC
+✅ Funciona diretamente no navegador
+
+1. Acesse: https://console.cloud.google.com/compute/instances
+2. Encontre a VM: unyleya-k8s
+3. Clique no botão "SSH" ao lado da VM
+4. Isso abrirá um terminal diretamente no navegador
+
+#### Opção B: Usando Google Cloud CLI
 ```bash
 # Instalar gcloud SDK primeiro se não tiver
 # Depois:
 gcloud compute ssh unyleya-k8s --zone=europe-north1-c
 ```
 
-#### Opção B: Usando SSH direto
+#### Opção C: Usando SSH direto
 ```bash
 ssh -i /caminho/para/chave-privada usuario@35.228.210.46
 ```
 
 ### 2. EXECUTAR SETUP INICIAL NA VM
 
+#### Opção A: Script Completo (RECOMENDADO)
+```bash
+# Clonar o repositório
+git clone https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao.git
+cd unyleya_projeto_cicd_Icaro_Galvao
+
+# Dar permissão de execução aos scripts
+chmod +x scripts/*.sh
+
+# Executar setup completo (Kubernetes + Deploy)
+./scripts/setup-completo.sh
+```
+
+#### Opção B: Passo a Passo Manual
 Dentro da VM, execute:
 
 ```bash
