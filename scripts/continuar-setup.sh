@@ -11,14 +11,14 @@ echo "=========================================="
 # Configurar kubectl
 echo ">>> Configurando kubectl..."
 mkdir -p ~/.kube
-sudo cp /etc/rancher/k3s/k3s.yaml ~/.kube/config
+sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 sudo chown $USER:$USER ~/.kube/config
 chmod 600 ~/.kube/config
 
 # Verificar cluster
 echo ">>> Verificando cluster..."
-kubectl get nodes
-kubectl version --short
+sudo k3s kubectl get nodes
+sudo k3s kubectl version --short
 
 # Instalar Helm
 echo ">>> Instalando Helm..."
@@ -36,11 +36,11 @@ sudo ufw allow 10250/tcp
 
 # Criar namespace azure-vote
 echo ">>> Criando namespace azure-vote..."
-kubectl create namespace azure-vote --dry-run=client -o yaml | kubectl apply -f -
+sudo k3s kubectl create namespace azure-vote --dry-run=client -o yaml | sudo k3s kubectl apply -f -
 
 # Configurar kubeconfig para acesso externo
 echo ">>> Configurando kubeconfig para acesso externo..."
-sed -i "s/127.0.0.1/35.228.210.46/g" ~/.kube/config
+sudo cat /etc/rancher/k3s/k3s.yaml | sed "s/127.0.0.1/35.228.210.46/g" > ~/.kube/config
 
 echo "=========================================="
 echo "  SETUP KUBERNETES CONCLUÍDO!"
