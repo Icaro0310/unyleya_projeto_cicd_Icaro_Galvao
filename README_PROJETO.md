@@ -2,19 +2,27 @@
 
 **Aluno:** Icaro Galvao do Nascimento  
 **Curso:** Unylea - Engenheiro DevOps  
-**Projeto:** Pipeline CI/CD com GitHub Actions  
+**Projeto:** Pipeline CI/CD com GitHub Actions, Kubernetes e New Relic  
 
 ---
 
 ## Sobre o Projeto
 
-Implementei uma esteira (pipeline) automatizada de CI/CD para a aplicacao **Azure Voting App Redis** usando **GitHub Actions**. A aplicacao consiste em um frontend Python Flask (sistema de votacao web) e um backend Redis para armazenamento dos votos, containerizados com Docker e Docker Compose.
+Implementei uma esteira (pipeline) automatizada de CI/CD completa para a aplicacao **Azure Voting App Redis**, incluindo:
+
+- **Parte 1 (Unidade 3):** Pipeline CI/CD com GitHub Actions - lint, build, test, security scan
+- **Parte 2 (Unidade 4):** Infraestrutura Kubernetes com Terraform, deploy via Helm Chart, e monitoramento com New Relic
+
+A aplicacao consiste em um frontend Python Flask (sistema de votacao web) e um backend Redis para armazenamento dos votos, containerizados com Docker.
 
 ---
 
-## Topologia do Pipeline
+## Topologia Completa
 
 ```
+                    PARTE 1 - CI/CD (GitHub Actions)
+                    ================================
+
 [Push/Pull Request no GitHub]
          |
          v
@@ -24,7 +32,7 @@ Implementei uma esteira (pipeline) automatizada de CI/CD para a aplicacao **Azur
          |
          v
     +-----------+
-    |   BUILD   |  -> Build da imagem Docker (azure-vote-front)
+    |   BUILD   |  -> Build da imagem Docker + Push para Registry
     +-----------+
          |
     +----+----+
@@ -33,89 +41,164 @@ Implementei uma esteira (pipeline) automatizada de CI/CD para a aplicacao **Azur
 +-------+ +----------+
 | TEST  | | SECURITY |  -> Testes integrados + Scan Trivy
 +-------+ +----------+
-    |         |
-    +----+----+
+
+
+                    PARTE 2 - KUBERNETES + MONITORAMENTO
+                    =====================================
+
+    +------------------+
+    |   TERRAFORM      |  -> Provisiona Namespace, Deployments, Services
+    |   (K8s Provider) |
+    +------------------+
+         |
+         v
+    +-----------+        Aprovacao por Email
+    |  CD PIPE  | -----> (Environment: production)
+    |  (Helm)   |
+    +-----------+
+         |
+         v
+    +------------------+     +------------------+
+    |   KUBERNETES     | <-- |    NEW RELIC     |
+    |   (kind cluster) |     |    (Monitoramento)|
+    |                  |     |    - Infra       |
+    |  azure-vote      |     |    - K8s         |
+    |  namespace       |     |    - Pods        |
+    +------------------+     +------------------+
          |
          v
     +-----------+
-    |  DEPLOY   |  -> Resumo do deploy (apenas branch main)
+    |  APLICACAO|  -> http://localhost:30080
+    |  (NodePort)|
     +-----------+
 ```
-
----
-
-## Jobs do Pipeline
-
-| Job | Descricao | Ferramenta | Duracao |
-|-----|-----------|------------|---------|
-| **Lint** | Analise estatica do codigo Python | flake8 | 18s |
-| **Build** | Construcao da imagem Docker | docker build | 1m2s |
-| **Test** | Testes integrados com Docker Compose | docker compose, curl, redis-cli | 50s |
-| **Security** | Scan de vulnerabilidades na imagem | Trivy | 1m11s |
-| **Deploy** | Resumo do deploy (apenas main) | echo | 40s |
-
-**Tempo total do pipeline:** 3m26s  
-**Resultado:** 5/5 jobs aprovados
 
 ---
 
 ## Etapas Realizadas
 
-### Etapa 1: Fork do Repositorio
+### PARTE 1 - CI/CD (Unidade 3)
+
+#### Etapa 1: Fork do Repositorio
 Fiz o fork do repositorio original `osanam-giordane/azure-voting-app-redis` para minha conta GitHub, criando `Icaro0310/azure-voting-app-redis`.
 
-### Etapa 2: Clone para PC
-Clonei o repositorio forkado para minha maquina local em `C:\Users\Utilizador\Downloads\azure-voting-app-redis`.
+#### Etapa 2: Clone para PC
+Clonei o repositorio forkado para minha maquina local.
 
-### Etapa 3: Criacao do Novo Repositorio
-Criei um novo repositorio no GitHub chamado `unyleya_projeto_cicd_Icaro_Galvao` com descricao "Unyleya Projeto DevOps - CI/CD - Icaro Galvao do Nascimento".
+#### Etapa 3: Criacao do Novo Repositorio
+Criei um novo repositorio no GitHub chamado `unyleya_projeto_cicd_Icaro_Galvao`.
 
-### Etapa 4: Commit e Push do Codigo
-Alterei o remote origin para o novo repositorio e fiz o push de todo o codigo da aplicacao azure-voting-app-redis para o novo repositorio.
+#### Etapa 4: Commit e Push do Codigo
+Alterei o remote origin para o novo repositorio e fiz o push de todo o codigo.
 
-### Etapa 5: Criacao do Pipeline CI/CD
-Criei o arquivo `.github/workflows/ci-cd.yml` com 5 jobs encadeados:
+#### Etapa 5: Pipeline CI/CD (ci-cd.yml)
+Criei o pipeline CI/CD com 5 jobs:
+1. **Lint & Code Quality** - flake8
+2. **Build Docker Image** - docker build
+3. **Testes Integrados** - docker compose + curl + redis-cli
+4. **Security Scan** - Trivy
+5. **Deploy** - Resumo do deploy
 
-1. **Lint & Code Quality** - Analise estatica com flake8
-2. **Build Docker Image** - Construcao da imagem Docker da aplicacao
-3. **Testes Integrados** - Subida da aplicacao com Docker Compose, teste HTTP (curl), teste Redis (redis-cli)
-4. **Security Scan** - Scan de vulnerabilidades com Trivy
-5. **Deploy** - Resumo do deploy (executado apenas na branch main)
+Resultado: 5/5 jobs aprovados em 3m26s.
 
-### Etapa 6: Correcoes do Pipeline
-Durante a execucao do pipeline, identifiquei e corrigi os seguintes problemas:
+### PARTE 2 - KUBERNETES + NEW RELIC (Unidade 4)
 
-- **Tentativa 1:** Parametro invalido `tags-additional` no docker/build-push-action - corrigi usando `docker build` direto
-- **Tentativa 2:** Acesso a `secrets` em condicional `if` - corrigi passando secret para variavel de ambiente
-- **Tentativa 3:** Comando `docker-compose` nao encontrado no runner (GitHub Actions usa Docker Compose v2) - corrigi para `docker compose`
-- **Tentativa 4:** Pipeline executado com sucesso total - 5/5 jobs aprovados
+#### Etapa 6: Criacao da Infraestrutura Kubernetes (substituto do AKS)
+Criei um cluster Kubernetes local usando **kind (Kubernetes in Docker)** como alternativa gratuita ao AKS (Azure Kubernetes Service).
 
-### Etapa 7: Adicao do Professor como Colaborador
-Adicionei o professor `osanam-giordane` como colaborador com permissao de **ADMIN** no repositorio, para que ele possa validar todos os passos.
+Cluster: `unyleya-k8s` (1 node control-plane, Kubernetes v1.30.0)
 
----
+#### Etapa 7: Registry Local (substituto do ACR)
+Configurei um registry Docker local como alternativa gratuita ao ACR (Azure Container Registry) para armazenar as imagens da aplicacao.
 
-## Como Executar
+#### Etapa 8: Terraform - Provisionamento K8s
+Criei a infraestrutura como codigo com Terraform (Kubernetes provider) provisionando:
+- Namespace `azure-vote`
+- ConfigMap com configuracoes da aplicacao
+- Deployment do frontend (2 replicas, Flask)
+- Deployment do backend (1 replica, Redis)
+- Service NodePort (porta 30080) para frontend
+- Service ClusterIP para backend
+- Liveness e readiness probes
+- Resource limits (CPU e memoria)
 
-### 1. Clonar o repositorio
+Arquivo: `iac/terraform-k8s/main.tf`
+
+#### Etapa 9: Helm Chart da Aplicacao
+Criei um Helm Chart para a aplicacao azure-vote com:
+- `Chart.yaml` - metadados do chart
+- `values.yaml` - configuracoes parametrizaveis
+- `templates/namespace.yaml` - namespace
+- `templates/configmap.yaml` - configuracoes
+- `templates/deployment-frontend.yaml` - deployment Flask
+- `templates/deployment-backend.yaml` - deployment Redis
+- `templates/service.yaml` - services NodePort e ClusterIP
+- `templates/NOTES.txt` - instrucoes pos-deploy
+
+Diretorio: `iac/helm/azure-vote/`
+
+#### Etapa 10: Pipeline CI Atualizada (ci-build.yml)
+Criei a pipeline de CI atualizada para build e push da imagem para o registry:
+1. **Lint & Code Quality** - flake8
+2. **Build Docker Image** - build + push para GitHub Container Registry (ghcr.io)
+3. **Security Scan** - Trivy
+4. **Validar Helm Chart** - helm lint + helm template
+5. **Validar Terraform** - terraform init + validate + fmt
+
+#### Etapa 11: Pipeline CD com Aprovacao por Email (cd-deploy.yml)
+Criei a pipeline de CD com:
+- **Job de Aprovacao** - usa GitHub Environment `production` com required reviewers (notificacao por email)
+- **Job de Deploy** - deploy via Helm no Kubernetes
+  - Login no registry
+  - Configuracao do kubeconfig
+  - `helm upgrade --install` com a imagem do registry
+  - Verificacao do deployment
+  - Teste de acesso a aplicacao
+
+#### Etapa 12: Implantacao no Kubernetes
+Fiz o deploy da aplicacao no cluster Kubernetes local via Helm:
+
 ```bash
-git clone https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao.git
-cd unyleya_projeto_cicd_Icaro_Galvao
+helm install azure-vote iac/helm/azure-vote \
+  --set frontend.image.repository=azure-vote-front \
+  --set frontend.image.tag=latest \
+  --set frontend.image.pullPolicy=Never
 ```
 
-### 2. Executar localmente com Docker Compose
+Resultado:
+- 3 pods rodando (2 frontend + 1 backend)
+- Service NodePort exposto na porta 30080
+- Aplicacao acessivel em http://localhost:30080
+- HTTP 200 - pagina de votacao com Cats x Dogs
+
+#### Etapa 13: Monitoramento com New Relic
+Instalei o New Relic no cluster Kubernetes via Helm para monitoramento de:
+- Infraestrutura (nodes, pods, containers)
+- Kubernetes (control plane, kubelet, KSM)
+- Metricas Prometheus
+- Logs da aplicacao
+- Aplicacao implantada
+
 ```bash
-docker compose up -d
-# Acessar: http://localhost:8080
+helm install newrelic newrelic/nri-bundle \
+  --set global.licenseKey=<INGEST-LICENSE-KEY> \
+  --set global.cluster=unyleya-k8s \
+  --namespace newrelic --create-namespace
 ```
 
-### 3. O pipeline executa automaticamente
-- Em cada **push** para `main` ou `master`
-- Em cada **Pull Request** para `main` ou `master`
+Resultado: 5 pods do New Relic rodando e enviando dados para a plataforma.
 
-Acompanhamento do pipeline:
-- **URL:** https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao/actions
-- **Run de sucesso:** Run #31026864085 (3m26s - 5/5 jobs aprovados)
+#### Etapa 14: Teste de Acesso a Aplicacao
+Testei o acesso a aplicacao provisionada no Kubernetes:
+
+```bash
+curl http://localhost:30080
+# HTTP Status: 200
+# Pagina com botoes Cats e Dogs funcionando
+```
+
+#### Etapa 15: Permissao para o Professor
+Adicionei o professor `osanam-giordane` como colaborador com permissao de **ADMIN** no repositorio GitHub.
 
 ---
 
@@ -125,29 +208,35 @@ Acompanhamento do pipeline:
 unyleya_projeto_cicd_Icaro_Galvao/
 ├── .github/
 │   └── workflows/
-│       └── ci-cd.yml              # Pipeline CI/CD (GitHub Actions)
+│       ├── ci-cd.yml              # Pipeline CI/CD Parte 1
+│       ├── ci-build.yml           # Pipeline CI Parte 2 (build + push registry)
+│       └── cd-deploy.yml          # Pipeline CD Parte 2 (deploy Helm + aprovacao)
+├── iac/
+│   ├── terraform-k8s/
+│   │   ├── main.tf                # Terraform - recursos Kubernetes
+│   │   └── variables.tf           # Variaveis Terraform
+│   └── helm/
+│       └── azure-vote/
+│           ├── Chart.yaml         # Metadados do Helm Chart
+│           ├── values.yaml        # Valores parametrizaveis
+│           └── templates/
+│               ├── namespace.yaml
+│               ├── configmap.yaml
+│               ├── deployment-frontend.yaml
+│               ├── deployment-backend.yaml
+│               ├── service.yaml
+│               └── NOTES.txt
 ├── azure-vote/
 │   ├── azure-vote/
 │   │   ├── main.py                # Aplicacao Flask (votacao)
-│   │   ├── config_file.cfg        # Configuracoes da aplicacao
-│   │   ├── static/
-│   │   │   └── default.css        # Estilos CSS
-│   │   └── templates/
-│   │       └── index.html         # Template da pagina de votacao
-│   ├── Dockerfile                 # Dockerfile do frontend (Flask)
-│   ├── Dockerfile-for-app-service # Dockerfile alternativo para App Service
-│   ├── app_init.supervisord.conf  # Configuracao do supervisord
-│   └── sshd_config                # Configuracao SSH
-├── jenkins-tutorial/
-│   ├── config-jenkins.sh          # Script de configuracao Jenkins
-│   └── deploy-jenkins-vm.sh       # Script de deploy Jenkins VM
-├── docker-compose.yaml            # Docker Compose (frontend + Redis)
-├── azure-vote-all-in-one-redis.yaml  # Manifest Kubernetes
-├── azure-pipelines.yml            # Pipeline Azure DevOps (original)
-├── README_PROJETO.md              # Documentacao do projeto
-├── README.md                      # README original
-├── .gitignore
-└── LICENSE
+│   │   ├── config_file.cfg
+│   │   ├── static/default.css
+│   │   └── templates/index.html
+│   ├── Dockerfile                 # Dockerfile do frontend
+│   └── ...
+├── docker-compose.yaml
+├── README_PROJETO.md              # Esta documentacao
+└── README.md
 ```
 
 ---
@@ -156,15 +245,59 @@ unyleya_projeto_cicd_Icaro_Galvao/
 
 | Tecnologia | Funcao |
 |------------|--------|
-| **GitHub Actions** | CI/CD - pipeline automatizado |
-| **Docker** | Containerizacao da aplicacao |
-| **Docker Compose** | Orquestracao frontend + backend |
+| **GitHub Actions** | CI/CD - pipelines automatizados |
+| **Kubernetes (kind)** | Orquestracao de containers (substituto do AKS) |
+| **Terraform** | Infraestrutura como codigo (K8s provider) |
+| **Helm** | Gerenciamento de pacotes K8s (Chart da aplicacao) |
+| **Docker** | Containerizacao |
+| **Docker Compose** | Orquestracao local (testes) |
 | **Python Flask** | Aplicacao web (votacao) |
 | **Redis** | Backend - armazenamento dos votos |
-| **flake8** | Analise estatica de codigo |
+| **New Relic** | Monitoramento e telemetria |
 | **Trivy** | Scanner de vulnerabilidades |
-| **Git** | Controle de versao |
-| **GitHub** | Hospedagem do repositorio |
+| **flake8** | Analise estatica de codigo |
+| **GitHub Container Registry** | Registry de imagens (substituto do ACR) |
+| **Git/GitHub** | Controle de versao e hospedagem |
+
+---
+
+## Pipelines GitHub Actions
+
+### Pipeline CI (ci-build.yml)
+| Job | Descricao | Duracao |
+|-----|-----------|---------|
+| Lint | Analise estatica flake8 | ~18s |
+| Build | Build + push imagem para registry | ~1m |
+| Security | Scan Trivy | ~1m11s |
+| Helm Validate | helm lint + template | ~30s |
+| Terraform Validate | init + validate + fmt | ~30s |
+
+### Pipeline CD (cd-deploy.yml)
+| Job | Descricao |
+|-----|-----------|
+| Approval | Aprovacao manual por email (environment: production) |
+| Deploy | helm upgrade --install no Kubernetes |
+
+---
+
+## Resultado do Kubernetes
+
+```
+NAMESPACE    NAME                                READY   STATUS    RESTARTS   AGE
+azure-vote   azure-vote-back-5fc4d7f79-nc9d4     1/1     Running   0          14m
+azure-vote   azure-vote-front-55c8f54487-b8n5b   1/1     Running   1          14m
+azure-vote   azure-vote-front-55c8f54487-vrglz   1/1     Running   1          14m
+newrelic     newrelic-nri-metadata-injection     1/1     Running   0          82s
+newrelic     newrelic-nri-prometheus             1/1     Running   0          82s
+newrelic     newrelic-nrk8s-controlplane         2/2     Running   0          70s
+newrelic     newrelic-nrk8s-ksm                  2/2     Running   0          82s
+newrelic     newrelic-nrk8s-kubelet              2/2     Running   0          69s
+```
+
+### Acesso a Aplicacao
+- **URL:** http://localhost:30080
+- **HTTP Status:** 200
+- **Conteudo:** Pagina de votacao Cats x Dogs
 
 ---
 
@@ -172,23 +305,9 @@ unyleya_projeto_cicd_Icaro_Galvao/
 
 | Repositorio | URL |
 |-------------|-----|
-| **Projeto CI/CD (principal)** | https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao |
+| **Projeto principal** | https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao |
 | **Fork original** | https://github.com/Icaro0310/azure-voting-app-redis |
 | **Repositorio original** | https://github.com/osanam-giordane/azure-voting-app-redis |
-
----
-
-## Resultado do Pipeline
-
-```
-✓ Lint & Code Quality           - 18s   APROVADO
-✓ Build Docker Image            - 1m2s  APROVADO
-✓ Security Scan (Trivy)         - 1m11s APROVADO
-✓ Testes Integrados (Docker)    - 50s   APROVADO
-✓ Deploy (Producao)             - 40s   APROVADO
-─────────────────────────────────────────────
-  Total: 3m26s | 5/5 jobs aprovados | 0 falhas
-```
 
 ---
 
