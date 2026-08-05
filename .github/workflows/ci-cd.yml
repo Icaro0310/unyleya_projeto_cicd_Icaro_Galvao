@@ -91,7 +91,7 @@ jobs:
 
       - name: Subir aplicacao com Docker Compose
         run: |
-          docker-compose up -d
+          docker compose up -d || docker-compose up -d
           sleep 15
           docker ps
 
@@ -113,7 +113,7 @@ jobs:
 
       - name: Derrubar aplicacao
         if: always()
-        run: docker-compose down
+        run: docker compose down || docker-compose down
 
   # ============================
   # JOB 4: Security Scan
