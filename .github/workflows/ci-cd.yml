@@ -29,15 +29,11 @@ jobs:
       - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install flake8 pylint
+          pip install flake8
 
       - name: Analise com flake8
         run: |
           flake8 azure-vote/azure-vote/main.py --max-line-length=120 --ignore=E501,W391 || true
-
-      - name: Analise com pylint
-        run: |
-          pylint azure-vote/azure-vote/main.py --disable=C0114,C0115,C0116,W0612 || true
 
   # ============================
   # JOB 2: Build Docker
@@ -50,19 +46,9 @@ jobs:
       - name: Checkout codigo
         uses: actions/checkout@v4
 
-      - name: Configurar Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
       - name: Build da imagem Docker
-        uses: docker/build-push-action@v5
-        with:
-          context: ./azure-vote
-          file: ./azure-vote/Dockerfile
-          tags: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          tags-additional: ${{ env.IMAGE_NAME }}:latest
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} -t ${{ env.IMAGE_NAME }}:latest ./azure-vote
 
       - name: Listar imagem construida
         run: docker images | grep ${{ env.IMAGE_NAME }}
