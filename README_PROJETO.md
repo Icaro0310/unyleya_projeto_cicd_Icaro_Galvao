@@ -10,10 +10,11 @@
 
 ### Ambiente de Produção (VM Google Cloud)
 - ✅ **VM Google Cloud:** unyleya-k8s (IP: 35.228.210.46)
-- ✅ **Acesso Público:** http://35.228.210.46:30080
-- ✅ **Kubernetes:** k3s (cluster leve)
-- ✅ **Deploy:** Helm Chart + GitHub Actions
-- 📝 **Instruções Migração:** Veja `MIGRACAO_VM.md`
+- ✅ **Kubernetes:** k3s v1.36.3 instalado e rodando
+- ✅ **Helm:** v3.21.3 instalado
+- ✅ **Firewall:** Portas 30080, 6443, 10250 configuradas
+- 🔄 **Deploy:** Em andamento - Helm Chart configurado
+- 📝 **Instruções:** Veja `MIGRACAO_VM.md` e `README_MIGRACAO_COMPLETA.md`
 
 ### Ambiente de Desenvolvimento (Local)
 - ✅ **Cluster:** kind (Kubernetes in Docker)
@@ -216,6 +217,15 @@ curl http://localhost:30080
 
 #### Etapa 15: Permissao para o Professor
 Adicionei o professor `osanam-giordane` como colaborador com permissao de **ADMIN** no repositorio GitHub.
+
+---
+
+## Status da Migração para VM Google Cloud
+
+Para informações detalhadas sobre a migração do kind local para a VM Google Cloud, consulte:
+- **[README_MIGRACAO_COMPLETA.md](README_MIGRACAO_COMPLETA.md)** - Documentação completa da migração
+- **[MIGRACAO_VM.md](MIGRACAO_VM.md)** - Instruções passo a passo
+- **[PROXIMOS_PASSOS.md](PROXIMOS_PASSOS.md)** - Próximos passos para conclusão
 
 ---
 
