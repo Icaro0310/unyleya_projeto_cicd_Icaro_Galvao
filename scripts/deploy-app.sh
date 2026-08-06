@@ -16,6 +16,9 @@ REPO_OWNER="Icaro0310"
 NAMESPACE="azure-vote"
 RELEASE_NAME="azure-vote"
 
+echo ">>> Configurando kubeconfig..."
+export KUBECONFIG=~/.kube/config
+
 echo ">>> Configurando acesso ao GitHub Container Registry..."
 # Nota: Para uso em produção, configure o secret do registry
 kubectl create secret docker-registry ghcr-secret \
