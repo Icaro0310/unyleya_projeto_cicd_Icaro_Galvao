@@ -10,12 +10,21 @@ echo "=========================================="
 
 # Verificar se Docker está instalado
 if ! command -v docker &> /dev/null; then
-    echo ">>> Docker não encontrado. Instalando..."
+    echo ">>> Docker não encontrado. Tentando instalar..."
+    
+    # Matar processos apt-get travados
+    echo ">>> Matando processos apt-get travados..."
+    sudo pkill -9 apt-get || true
+    sudo rm -f /var/lib/apt/lists/lock
+    sudo rm -f /var/lib/dpkg/lock
+    sudo rm -f /var/lib/dpkg/lock-frontend
+    sudo dpkg --configure -a
+    
     curl -fsSL https://get.docker.com -o get-docker.sh
     sudo sh get-docker.sh
     sudo usermod -aG docker $USER
-    echo ">>> Docker instalado. Reinicie a sessão SSH."
-    exit 0
+    echo ">>> Docker instalado. Reexecute o script."
+    exit 1
 fi
 
 echo ">>> Docker encontrado. Configurando..."
