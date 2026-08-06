@@ -21,10 +21,13 @@ Este documento descreve o processo completo de migração da aplicação Azure V
 - [x] Todo o código enviado para GitHub
 
 ### 🔄 EM ANDAMENTO
-- [ ] Deploy da aplicação via Helm na VM
+- [x] CRON job configurado para deploy automático
+- [ ] Deploy da aplicação via Helm na VM (em execução via CRON)
 - [ ] Configuração do kubeconfig para GitHub Actions
 - [ ] Teste de acesso público (http://35.228.210.46:30080)
 - [ ] Configuração do New Relic (opcional)
+
+**Status Atual:** CRON job configurado com sucesso e executando automaticamente a cada 5 minutos. O deploy está sendo tentado automaticamente. Monitorar: `tail -f /tmp/deploy.log`
 
 ---
 
