@@ -419,12 +419,14 @@ http://35.228.210.46:30080
 
 **Migração VM Google Cloud:**
 - [x] CRON job configurado para deploy automático
-- [ ] Deploy da aplicação via Helm (em execução via CRON)
+- [x] Scripts de deploy remoto criados
+- [x] Verificação remota implementada
+- [ ] Deploy da aplicação via Helm (precisa de reinício da VM)
 - [ ] Configuração kubeconfig para GitHub Actions
 - [ ] Teste de acesso público
 - [ ] Configuração New Relic
 
-**Última Atualização:** CRON job configurado com sucesso. O deploy automático está tentando executar a cada 5 minutos. Status: aguardando conclusão do deploy automático.
+**Última Atualização:** Verificação remota mostra que a VM está respondendo, mas a aplicação não está em HTTP 200. Recomenda-se reiniciar a VM via Console Google Cloud para forçar nova execução do CRON job. Veja `INSTRUCAO_REINICIO_VM.md` para detalhes.
 
 ---
 
