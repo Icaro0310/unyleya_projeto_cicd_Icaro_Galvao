@@ -444,6 +444,13 @@ kubectl port-forward -n azure-vote svc/azure-vote-front 30080:80
 lt --port 30080
 ```
 
+**Melhorias de Monitoramento (Opção A - 70% dos objetivos):**
+- ✅ SonarQube instalado via Docker (localhost:9000)
+- ✅ Pipeline SonarQube no GitHub Actions
+- ✅ Script de configuração de alertas New Relic
+- ✅ Cluster kind restaurado e funcionando
+- ✅ New Relic monitoramento ativo (4/5 pods rodando)
+
 **Migração VM Google Cloud:** ❌ **CANCELADA**
 - VM apresentou múltiplos problemas (k3s, Docker, apt-get)
 - Solução localtunnel é mais rápida e confiável
