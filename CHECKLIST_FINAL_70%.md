@@ -36,9 +36,11 @@
 - ✅ **Triggers:** Documentados no script
 
 ### ACESSO PÚBLICO
-- ✅ **URL Pública:** https://great-planes-jump.loca.lt
-- ✅ **Local:** http://localhost:30080 (HTTP 200)
-- ✅ **Professor:** Pode acessar de qualquer lugar
+- ✅ **URL Aplicação:** https://great-planes-jump.loca.lt
+- ✅ **URL SonarQube:** https://six-banks-fold.loca.lt
+- ✅ **Local Aplicação:** http://localhost:30080 (HTTP 200)
+- ✅ **Local SonarQube:** http://localhost:9000 (admin/admin)
+- ✅ **Professor:** Pode acessar tudo de qualquer lugar
 
 ## 📊 CHECKLIST CORRIGIDO (PARTE 2)
 
@@ -63,8 +65,8 @@
 
 - **Repositório:** https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao
 - **Pipelines:** https://github.com/Icaro0310/unyleya_projeto_cicd_Icaro_Galvao/actions
-- **Aplicação:** https://great-planes-jump.loca.lt
-- **SonarQube:** http://localhost:9000 (admin/admin)
+- **Aplicação (Online):** https://great-planes-jump.loca.lt
+- **SonarQube (Online):** https://six-banks-fold.loca.lt (admin/admin)
 - **Verificação de Objetivos:** VERIFICACAO_OBJETIVOS.md
 
 ## 📝 OBSERVAÇÕES FINAIS
@@ -73,6 +75,15 @@
 2. **New Relic funcional:** 4/5 pods rodando, coletando métricas e logs
 3. **SonarQube adicionado:** Para atingir 70% dos objetivos
 4. **Alertas configurados:** Script criado para configuração manual
-5. **Acesso público:** localtunnel expõe aplicação para professor
+5. **Acesso público:** localtunnel expõe aplicação E SonarQube para professor
+
+## 🌐 ACESSO DO PROFESSOR
+
+**Para o professor acessar tudo online:**
+
+1. **Aplicação Azure Voting App:** https://great-planes-jump.loca.lt
+2. **SonarQube (Análise de Código):** https://six-banks-fold.loca.lt
+   - Login: admin
+   - Senha: admin
 
 **STATUS FINAL:** 70% dos objetivos alcançados com sucesso! 🎯
